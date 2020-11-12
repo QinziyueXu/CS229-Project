@@ -9,7 +9,7 @@ import parse_anime_info
 
 
 usernames = pickle.load(open(parse_anime_info.pickle_file_name, "rb"))
-folder_name = 'results/'
+folder_name = './'
 csv_file_name = folder_name+"cs229_user_data.csv"
 
 #if there is an unexpected exception, we don't want to parse repetitive data

@@ -1,16 +1,17 @@
 import pandas as pd
 import pickle
+import sys
 
 output_folder = './'
 genre_list_file = output_folder + 'cs229_genre_list.p'
-threshold = 15
+#threshold = 15
 genre_list = []
 
-def filter_genres():
+def filter_genres(threshold, anime_range = 100):
     anime_dataframe = pd.read_csv('cs229_anime_data.csv')
     genre_dict = {}
     for index, row in anime_dataframe.iterrows():
-        if row['ID'] >= 100:
+        if row['ID'] >= anime_range:
             break
         temp_list = row['Genres'].split(',')
         print(temp_list)
@@ -28,5 +29,9 @@ def filter_genres():
     print(genre_list)
     pickle.dump(genre_list, open(genre_list_file, "wb"))
 
-
-filter_genres()
+if __name__ == '__main__':
+    threshold = sys.argv[1]
+    if not threshold.isdigit():
+        print("Invalid command")
+        exit(1)
+    filter_genres(int(threshold))

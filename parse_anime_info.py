@@ -4,8 +4,9 @@ import pandas as pd
 import time
 import pickle
 import csv
+import sys
 
-folder_name = 'results/'
+folder_name = './'
 csv_file_name = folder_name+"cs229_anime_data.csv"
 csv_reviews_file_name = folder_name+"cs229_reviews_data.csv"
 pickle_file_name = folder_name+"cs229_username_list.p"
@@ -13,7 +14,6 @@ pickle_file_name = folder_name+"cs229_username_list.p"
 #https://myanimelist.net/info.php?search=%25%25%25&go=relationids&divname=relationGen1
 #The max id is 130285
 start_id = 0
-num_id_visited = 100
 
 def extract_list_info(input_list, key):
     result = []
@@ -21,19 +21,7 @@ def extract_list_info(input_list, key):
         result.append(element[key])
     return ','.join(result)
 
-output_folder = './results/'
-genre_list_file = output_folder + 'cs229_genre_list.p'
-genre_list = pickle.load(open(genre_list_file, "rb"))
-print(genre_list)
-
-def genre_extract_list_info(input_list, key):
-    result = []
-    for element in input_list:
-        if element[key] in genre_list:
-            result.append(element[key])
-    return ','.join(result)
-
-def main():
+def main(num_id_visited):
 
     fields = ['ID', 'Image Url', 'Title', 'Episodes', 'Rating', 'Score', 'Rank', 'Popularity', 'Members', 'Favorites', 'Adaption_Size', 'Producers', 'Studios', 'Genres', 'Type', 'Status']
     review_fields = ['Anime ID', 'Username', 'Scores_overall', 'Scores_story', 'Scores_animation', 'Scores_sound', 'Scores_character', 'Scores_enjoyment']
@@ -76,7 +64,7 @@ def main():
 
                     content['Producers'] = extract_list_info(anime['producers'], 'name')
                     content['Studios'] = extract_list_info(anime['studios'], 'name')
-                    content['Genres'] = genre_extract_list_info(anime['genres'], 'name')
+                    content['Genres'] = extract_list_info(anime['genres'], 'name')
 
                     content['Type'] = anime['type']
                     content['Status'] = anime['status']
@@ -157,7 +145,7 @@ def parse_no_user_info(list_to_parse):
 
                 content['Producers'] = extract_list_info(anime['producers'], 'name')
                 content['Studios'] = extract_list_info(anime['studios'], 'name')
-                content['Genres'] = genre_extract_list_info(anime['genres'], 'name')
+                content['Genres'] = extract_list_info(anime['genres'], 'name')
 
                 content['Type'] = anime['type']
                 content['Status'] = anime['status']
@@ -170,29 +158,41 @@ def parse_no_user_info(list_to_parse):
                 print("failure at " + str(anime_id))
                 raise
 
-def parse_fav_list():
+def parse_fav_list(already_parsed_range):
     result = set()
-    user_dataframe = pd.read_csv('results/cs229_user_data.csv')
+    user_dataframe = pd.read_csv(folder_name+'cs229_user_data.csv')
 
     for index, row in user_dataframe.iterrows():
         if isinstance(row['Favorites_anime_id'], str):
             temp_list = row['Favorites_anime_id'].split(',')
             for id in temp_list:
-                result.add(int(id))
+                if int(id) > already_parsed_range:
+                    result.add(int(id))
     print(result)
     return result
 
-
+#python parse_anime_info.py [100]
+#python parse_anime_info.py fav_anime_list [100]
 if __name__ == '__main__':
-    #main()
 
-    anime_list = []
-    anime_list.extend(parse_fav_list())
-    for i in range(100):
-        if i in anime_list:
-            anime_list.remove(i)
-    print(anime_list)
-    parse_no_user_info(anime_list)
+    if len(sys.argv) < 2:
+        print("Command is invalid")
+        exit(1)
+    input_command = sys.argv[1]
+
+    if input_command.isdigit():
+        num_id_visited = int(input_command)
+        main(num_id_visited)
+
+    elif input_command == "fav_anime_list":
+        already_parsed_range = int(sys.argv[2])
+        anime_list = []
+        anime_list.extend(parse_fav_list(already_parsed_range))
+        print(anime_list)
+        parse_no_user_info(anime_list)
+
+    else:
+        print("Command is invalid")
 
 
 
